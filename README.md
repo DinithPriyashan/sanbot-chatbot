@@ -16,6 +16,23 @@ Voice mode starts automatically when the page loads. Allow microphone access whe
 the browser asks, then speak naturally; each phrase is sent automatically and
 the bot replies by voice. Click the microphone button to pause or resume
 hands-free listening.
+
+### Android WebView voice support
+
+Android WebView does not consistently expose the browser Web Speech recognition
+API. The host app must expose a JavaScript bridge named `Android` with
+`startVoiceInput()` and `stopVoiceInput()` methods. After Android
+`SpeechRecognizer` returns a phrase, call:
+
+```javascript
+window.onNativeVoiceResult("recognized text");
+```
+
+For microphone or recognition failures, call
+`window.onNativeVoiceError("error message")`. The page automatically uses this
+bridge when the Web Speech API is unavailable. The WebView should also enable
+JavaScript, DOM storage, microphone permission, and load this page over HTTPS
+or from a secure local origin.
 Voice input uses the browser's Web Speech API, so it requires a browser that
 supports speech recognition and works best when the app is served from
 `localhost` or HTTPS.

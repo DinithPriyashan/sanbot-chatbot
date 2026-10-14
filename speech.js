@@ -7,7 +7,7 @@ let voiceRecognitionRunning = false;
 let waitingForReply = false;
 
 const textToSpeech = (string) => {
-  if (voiceModeEnabled && voiceRecognitionRunning) {
+  if (voiceModeEnabled && voiceRecognition && voiceRecognitionRunning) {
     voiceRecognition.stop();
   }
   document.body.classList.add("is-speaking");
@@ -21,7 +21,9 @@ const textToSpeech = (string) => {
   voice.onend = () => {
     document.body.classList.remove("is-speaking");
     waitingForReply = false;
-    if (voiceModeEnabled && voiceRecognition && !voiceRecognitionRunning) {
+    if (voiceModeEnabled && typeof window.resumeVoiceInput === "function") {
+      window.resumeVoiceInput();
+    } else if (voiceModeEnabled && voiceRecognition && !voiceRecognitionRunning) {
       try {
         voiceRecognition.start();
       } catch (error) {
@@ -39,11 +41,81 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputField = document.getElementById("input");
   const voiceStatus = document.getElementById("voice-status");
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const androidBridge = window.Android;
+  const nativeStart = androidBridge &&
+    (androidBridge.startVoiceInput || androidBridge.startVoiceRecognition);
+  const nativeStop = androidBridge &&
+    (androidBridge.stopVoiceInput || androidBridge.stopVoiceRecognition);
 
-  if (!SpeechRecognition) {
+  if (!SpeechRecognition && !nativeStart) {
     micButton.disabled = true;
     micButton.title = "Voice input is not supported in this browser";
-    voiceStatus.innerText = "Voice input is not supported in this browser.";
+    voiceStatus.innerText = "Voice input needs Chrome or Android WebView voice bridge support.";
+    return;
+  }
+
+  if (!SpeechRecognition && nativeStart) {
+    function setNativeListeningState(isListening) {
+      voiceRecognitionRunning = isListening;
+      micButton.classList.toggle("is-listening", isListening);
+      document.body.classList.toggle("is-listening", isListening);
+      micButton.setAttribute("aria-label", isListening ? "Stop voice input" : "Start voice input");
+      micButton.title = isListening ? "Stop voice input" : "Start voice input";
+    }
+
+    function startVoiceRecognition() {
+      if (!voiceModeEnabled || voiceRecognitionRunning || synth.speaking) {
+        return;
+      }
+
+      try {
+        nativeStart.call(androidBridge);
+        setNativeListeningState(true);
+        voiceStatus.innerText = "Listening continuously...";
+      } catch (error) {
+        setNativeListeningState(false);
+        voiceStatus.innerText = "Could not start the tablet microphone.";
+        console.error("Android voice input failed:", error);
+      }
+    }
+
+    window.onNativeVoiceResult = (transcript) => {
+      if (typeof transcript === "string" && transcript.trim() && !waitingForReply) {
+        waitingForReply = true;
+        inputField.value = transcript.trim();
+        if (typeof nativeStop === "function") {
+          nativeStop.call(androidBridge);
+        }
+        setNativeListeningState(false);
+        sendMessage();
+        voiceStatus.innerText = "Message received. Preparing reply...";
+      }
+    };
+
+    window.onNativeVoiceError = (message) => {
+      setNativeListeningState(false);
+      voiceStatus.innerText = message || "Tablet voice input failed. Please try again.";
+    };
+
+    window.resumeVoiceInput = startVoiceRecognition;
+    micButton.addEventListener("click", () => {
+      if (voiceModeEnabled) {
+        voiceModeEnabled = false;
+        if (typeof nativeStop === "function") {
+          nativeStop.call(androidBridge);
+        }
+        setNativeListeningState(false);
+        voiceStatus.innerText = "Voice input paused. Click the microphone to resume.";
+        return;
+      }
+
+      voiceModeEnabled = true;
+      inputField.value = "";
+      startVoiceRecognition();
+    });
+
+    voiceModeEnabled = true;
+    setTimeout(startVoiceRecognition, 300);
     return;
   }
 
@@ -97,6 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!voiceModeEnabled || voiceRecognitionRunning || synth.speaking) {
       return;
     }
+    window.resumeVoiceInput = startVoiceRecognition;
 
     try {
       recognition.start();
