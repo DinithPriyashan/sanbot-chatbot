@@ -4,6 +4,7 @@ const synth = window.speechSynthesis;
 let voiceRecognition = null;
 let voiceModeEnabled = false;
 let voiceRecognitionRunning = false;
+let waitingForReply = false;
 
 const textToSpeech = (string) => {
   if (voiceModeEnabled && voiceRecognitionRunning) {
@@ -19,6 +20,7 @@ const textToSpeech = (string) => {
   voice.pitch = 1; // Can be 0, 1, or 2
   voice.onend = () => {
     document.body.classList.remove("is-speaking");
+    waitingForReply = false;
     if (voiceModeEnabled && voiceRecognition && !voiceRecognitionRunning) {
       try {
         voiceRecognition.start();
@@ -98,12 +100,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const transcript = event.results[index][0].transcript;
       if (event.results[index].isFinal) {
         finalTranscript += transcript;
+        const message = finalTranscript.trim();
+
+        if (message && !waitingForReply) {
+          waitingForReply = true;
+          inputField.value = message;
+          recognition.stop();
+          sendMessage();
+          finalTranscript = "";
+          voiceStatus.innerText = "Message received. Preparing reply...";
+        }
       } else {
         interimTranscript += transcript;
       }
     }
 
-    inputField.value = `${finalTranscript} ${interimTranscript}`.trim();
+    if (!waitingForReply) {
+      inputField.value = `${finalTranscript} ${interimTranscript}`.trim();
+    }
   };
 
   recognition.onerror = (event) => {
@@ -124,13 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.remove("is-listening");
     micButton.classList.remove("is-listening");
 
-    if (finalTranscript.trim()) {
-      sendMessage();
-      finalTranscript = "";
-      inputField.value = "";
-    }
-
-    if (voiceModeEnabled) {
+    if (voiceModeEnabled && !waitingForReply) {
       micButton.classList.add("is-listening");
       micButton.setAttribute("aria-label", "Stop voice input");
       micButton.title = "Stop voice input";
@@ -140,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         voiceStatus.innerText = "Speaking reply...";
       }
-    } else {
+    } else if (!voiceModeEnabled) {
       micButton.setAttribute("aria-label", "Start voice input");
       micButton.title = "Start voice input";
     }
