@@ -9,3 +9,11 @@ Enjoy!
 [Demo](https://sylviapap.github.io/chatbot/)
 
 [Blog post](https://dev.to/sylviapap/make-a-simple-chatbot-with-javascript-1gc)
+
+## Voice input
+
+Click the microphone button next to the message field and allow microphone access
+when the browser asks. Speak your message, then pause to send it automatically.
+Voice input uses the browser's Web Speech API, so it requires a browser that
+supports speech recognition and works best when the app is served from
+`localhost` or HTTPS.

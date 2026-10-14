@@ -44,11 +44,56 @@ span {
 	color: .711 
 }
  
-input { 
+.input-row {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	gap: 8px;
+}
+
+input {
 	border: 0; 
 	padding: 15px; 
-	margin-left: auto;
+	flex: 1;
 	border-radius: 10px; 
+}
+
+.input-row button {
+	border: 0;
+	border-radius: 10px;
+	padding: 11px 14px;
+	background-color: #2f80ed;
+	color: white;
+	cursor: pointer;
+	font-size: 18px;
+	line-height: 1;
+}
+
+.input-row button:hover {
+	background-color: #216ac5;
+}
+
+.input-row button:disabled {
+	background-color: #aab4c3;
+	cursor: not-allowed;
+}
+
+.input-row button.is-listening {
+	background-color: #d64545;
+	animation: pulse 1.2s infinite;
+}
+
+.voice-status {
+	min-height: 18px;
+	margin: 5px 0 0;
+	color: #555;
+	font-size: 13px;
+}
+
+@keyframes pulse {
+	50% {
+		opacity: .55;
+	}
 }
 
 .messages {
