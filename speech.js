@@ -9,6 +9,7 @@ const textToSpeech = (string) => {
   if (voiceModeEnabled && voiceRecognitionRunning) {
     voiceRecognition.stop();
   }
+  document.body.classList.add("is-speaking");
 
   let voice = new SpeechSynthesisUtterance(string);
   voice.text = string;
@@ -17,6 +18,7 @@ const textToSpeech = (string) => {
   voice.rate = 1;
   voice.pitch = 1; // Can be 0, 1, or 2
   voice.onend = () => {
+    document.body.classList.remove("is-speaking");
     if (voiceModeEnabled && voiceRecognition && !voiceRecognitionRunning) {
       try {
         voiceRecognition.start();
@@ -86,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     micButton.setAttribute("aria-label", "Stop voice input");
     micButton.title = "Stop voice input";
     voiceStatus.innerText = "Listening continuously...";
+    document.body.classList.add("is-listening");
   };
 
   recognition.onresult = (event) => {
@@ -118,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   recognition.onend = () => {
     voiceRecognitionRunning = false;
+    document.body.classList.remove("is-listening");
     micButton.classList.remove("is-listening");
 
     if (finalTranscript.trim()) {

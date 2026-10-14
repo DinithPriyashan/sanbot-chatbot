@@ -76,6 +76,11 @@ function compare(promptsArray, repliesArray, string) {
 
 function addChat(input, product) {
   const messagesContainer = document.getElementById("messages");
+  const welcomeMessage = messagesContainer.querySelector(".welcome-message");
+
+  if (welcomeMessage) {
+    welcomeMessage.remove();
+  }
 
   let userDiv = document.createElement("div");
   userDiv.id = "user";

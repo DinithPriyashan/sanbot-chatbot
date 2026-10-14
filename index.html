@@ -2,24 +2,50 @@
 <html>
 
 <head>
-	<title>Chatbot</title>
-	<link rel="icon" href="bot.png" />
+	<title>SLT MOBITEL Voice Assistant</title>
+	<link rel="icon" href="slt-mobitel-logo.png" />
 	<link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 	<div id="container" class="container">
 		<div id="chat" class="chat">
-			<div id="messages" class="messages"></div>
+			<header class="chat-header">
+				<img class="brand-logo" src="slt-mobitel-logo.png" alt="SLT MOBITEL">
+				<div>
+					<p class="eyebrow">SLT MOBITEL</p>
+					<h1>Voice Assistant</h1>
+					<p class="header-subtitle">Talk naturally. Stay connected.</p>
+				</div>
+			</header>
+			<div class="voice-visualizer" aria-hidden="true">
+				<div class="voice-orbit"></div>
+				<div class="voice-core"><span>🎙</span></div>
+				<div class="voice-bars">
+					<i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+				</div>
+			</div>
+			<div id="messages" class="messages">
+				<div class="welcome-message">
+					<strong>Ayubowan!</strong>
+					<span>I'm your SLT MOBITEL assistant. Ask me anything.</span>
+				</div>
+			</div>
 			<div class="input-row">
 				<input id="input" type="text" placeholder="Say something..." autocomplete="off" autofocus="true" />
 				<button id="mic-button" type="button" aria-label="Start voice input" title="Start voice input">
-					<span aria-hidden="true">🎙️</span>
+					<span aria-hidden="true">🎙</span>
 				</button>
 			</div>
 			<p id="voice-status" class="voice-status" role="status" aria-live="polite"></p>
 		</div>
-		<img src="bot.png" alt="Robot cartoon" height="500vh">
+		<aside class="assistant-card">
+			<div class="assistant-glow"></div>
+			<img src="bot.png" alt="SLT MOBITEL chatbot" class="bot-image">
+			<span class="online-dot"></span>
+			<p>Always here to help</p>
+			<small>Powered by SLT MOBITEL</small>
+		</aside>
 	</div>
 </body>
 <script type="text/javascript" src="index.js" ></script>
