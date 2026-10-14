@@ -1,14 +1,32 @@
 // Text to Speech
 
 const synth = window.speechSynthesis;
+let voiceRecognition = null;
+let voiceModeEnabled = false;
+let voiceRecognitionRunning = false;
 
 const textToSpeech = (string) => {
+  if (voiceModeEnabled && voiceRecognitionRunning) {
+    voiceRecognition.stop();
+  }
+
   let voice = new SpeechSynthesisUtterance(string);
   voice.text = string;
   voice.lang = "en-US";
   voice.volume = 1;
   voice.rate = 1;
   voice.pitch = 1; // Can be 0, 1, or 2
+  voice.onend = () => {
+    if (voiceModeEnabled && voiceRecognition && !voiceRecognitionRunning) {
+      try {
+        voiceRecognition.start();
+      } catch (error) {
+        if (error.name !== "InvalidStateError") {
+          console.error("Could not resume voice input:", error);
+        }
+      }
+    }
+  };
   synth.speak(voice);
 }
 
@@ -26,27 +44,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.continuous = false;
+  voiceRecognition = recognition;
+  recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = "en-US";
   let finalTranscript = "";
 
   micButton.addEventListener("click", () => {
-    if (micButton.classList.contains("is-listening")) {
-      recognition.stop();
+    if (voiceModeEnabled) {
+      voiceModeEnabled = false;
+      if (voiceRecognitionRunning) {
+        recognition.stop();
+      }
+      voiceStatus.innerText = "Voice input paused. Click the microphone to resume.";
       return;
     }
 
+    voiceModeEnabled = true;
     finalTranscript = "";
     inputField.value = "";
-    recognition.start();
+    startVoiceRecognition();
   });
 
+  function startVoiceRecognition() {
+    if (!voiceModeEnabled || voiceRecognitionRunning || synth.speaking) {
+      return;
+    }
+
+    try {
+      recognition.start();
+    } catch (error) {
+      if (error.name !== "InvalidStateError") {
+        voiceStatus.innerText = "Could not start the microphone. Please try again.";
+      }
+    }
+  }
+
   recognition.onstart = () => {
+    voiceRecognitionRunning = true;
     micButton.classList.add("is-listening");
     micButton.setAttribute("aria-label", "Stop voice input");
     micButton.title = "Stop voice input";
-    voiceStatus.innerText = "Listening...";
+    voiceStatus.innerText = "Listening continuously...";
   };
 
   recognition.onresult = (event) => {
@@ -71,21 +110,46 @@ document.addEventListener("DOMContentLoaded", () => {
       "no-speech": "No speech detected. Try again."
     };
     voiceStatus.innerText = messages[event.error] || "Voice input failed. Please try again.";
+
+    if (event.error === "not-allowed") {
+      voiceModeEnabled = false;
+    }
   };
 
   recognition.onend = () => {
+    voiceRecognitionRunning = false;
     micButton.classList.remove("is-listening");
-    micButton.setAttribute("aria-label", "Start voice input");
-    micButton.title = "Start voice input";
 
     if (finalTranscript.trim()) {
       sendMessage();
-      voiceStatus.innerText = "Message sent.";
-    } else if (!voiceStatus.innerText.startsWith("Microphone") &&
+      finalTranscript = "";
+      inputField.value = "";
+    }
+
+    if (voiceModeEnabled) {
+      micButton.classList.add("is-listening");
+      micButton.setAttribute("aria-label", "Stop voice input");
+      micButton.title = "Stop voice input";
+      if (!synth.speaking) {
+        voiceStatus.innerText = "Listening continuously...";
+        setTimeout(startVoiceRecognition, 150);
+      } else {
+        voiceStatus.innerText = "Speaking reply...";
+      }
+    } else {
+      micButton.setAttribute("aria-label", "Start voice input");
+      micButton.title = "Start voice input";
+    }
+
+    if (!voiceModeEnabled && !voiceStatus.innerText.startsWith("Microphone") &&
       !voiceStatus.innerText.startsWith("No microphone") &&
       !voiceStatus.innerText.startsWith("No speech") &&
       !voiceStatus.innerText.startsWith("Voice input failed")) {
-      voiceStatus.innerText = "";
+      voiceStatus.innerText = "Voice input paused. Click the microphone to resume.";
     }
   };
+
+  // Start hands-free voice mode as soon as the page is ready.
+  voiceModeEnabled = true;
+  setTimeout(startVoiceRecognition, 300);
 });

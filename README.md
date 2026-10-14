@@ -12,8 +12,10 @@ Enjoy!
 
 ## Voice input
 
-Click the microphone button next to the message field and allow microphone access
-when the browser asks. Speak your message, then pause to send it automatically.
+Voice mode starts automatically when the page loads. Allow microphone access when
+the browser asks, then speak naturally; each phrase is sent automatically and
+the bot replies by voice. Click the microphone button to pause or resume
+hands-free listening.
 Voice input uses the browser's Web Speech API, so it requires a browser that
 supports speech recognition and works best when the app is served from
 `localhost` or HTTPS.
