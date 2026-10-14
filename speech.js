@@ -53,10 +53,33 @@ document.addEventListener("DOMContentLoaded", () => {
   recognition.interimResults = true;
   recognition.lang = "en-US";
   let finalTranscript = "";
+  let silenceTimer = null;
+
+  function submitVoiceMessage() {
+    const message = inputField.value.trim();
+
+    if (!message || waitingForReply) {
+      return;
+    }
+
+    clearTimeout(silenceTimer);
+    waitingForReply = true;
+    inputField.value = message;
+    finalTranscript = "";
+    recognition.stop();
+    sendMessage();
+    voiceStatus.innerText = "Message received. Preparing reply...";
+  }
+
+  function restartSilenceTimer() {
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(submitVoiceMessage, 3000);
+  }
 
   micButton.addEventListener("click", () => {
     if (voiceModeEnabled) {
       voiceModeEnabled = false;
+      clearTimeout(silenceTimer);
       if (voiceRecognitionRunning) {
         recognition.stop();
       }
@@ -100,16 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const transcript = event.results[index][0].transcript;
       if (event.results[index].isFinal) {
         finalTranscript += transcript;
-        const message = finalTranscript.trim();
-
-        if (message && !waitingForReply) {
-          waitingForReply = true;
-          inputField.value = message;
-          recognition.stop();
-          sendMessage();
-          finalTranscript = "";
-          voiceStatus.innerText = "Message received. Preparing reply...";
-        }
       } else {
         interimTranscript += transcript;
       }
@@ -117,6 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!waitingForReply) {
       inputField.value = `${finalTranscript} ${interimTranscript}`.trim();
+      if (inputField.value) {
+        restartSilenceTimer();
+        voiceStatus.innerText = "I'm listening... send when you finish speaking.";
+      }
     }
   };
 
@@ -138,7 +155,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.remove("is-listening");
     micButton.classList.remove("is-listening");
 
-    if (voiceModeEnabled && !waitingForReply) {
+    if (voiceModeEnabled && !waitingForReply && finalTranscript.trim()) {
+      restartSilenceTimer();
+    } else if (voiceModeEnabled && !waitingForReply) {
       micButton.classList.add("is-listening");
       micButton.setAttribute("aria-label", "Stop voice input");
       micButton.title = "Stop voice input";
