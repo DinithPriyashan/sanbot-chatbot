@@ -1,12 +1,28 @@
 const synth = window.speechSynthesis;
+let speechOutputUnlocked = false;
 
 const textToSpeech = (string) => {
+  if (!synth) {
+    return;
+  }
+
+  if (typeof synth.cancel === "function") {
+    synth.cancel();
+  }
+
+  if (typeof synth.resume === "function") {
+    synth.resume();
+  }
+
   const voice = new SpeechSynthesisUtterance(string);
   voice.text = string;
   voice.lang = "en-US";
   voice.volume = 1;
   voice.rate = 1;
   voice.pitch = 1;
+  voice.onstart = () => {
+    speechOutputUnlocked = true;
+  };
   synth.speak(voice);
 };
 
@@ -33,6 +49,7 @@ const setupSpeechRecognition = () => {
 
   let finalTranscript = "";
   let recognitionError = false;
+  let microphonePermissionChecked = false;
 
   const setListening = (isListening) => {
     listenButton.classList.toggle("listening", isListening);
@@ -41,7 +58,44 @@ const setupSpeechRecognition = () => {
     listenButton.setAttribute("aria-pressed", String(isListening));
   };
 
-  listenButton.addEventListener("click", () => {
+  const checkMicrophonePermission = async () => {
+    if (microphonePermissionChecked) {
+      return true;
+    }
+
+    if (!window.isSecureContext && window.location.protocol !== "file:") {
+      speechStatus.textContent = "Voice needs HTTPS or localhost in Chrome.";
+      return false;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      microphonePermissionChecked = true;
+      return true;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      microphonePermissionChecked = true;
+      return true;
+    } catch (error) {
+      const messages = {
+        "NotAllowedError": "Allow microphone permission for this site in Chrome.",
+        "PermissionDeniedError": "Allow microphone permission for this site in Chrome.",
+        "NotFoundError": "Chrome cannot find a microphone on this tablet.",
+        "SecurityError": "Voice needs HTTPS or localhost in Chrome."
+      };
+      speechStatus.textContent = messages[error.name] || "Chrome could not open the microphone.";
+      return false;
+    }
+  };
+
+  listenButton.addEventListener("click", async () => {
+    speechOutputUnlocked = true;
+    if (synth && typeof synth.resume === "function") {
+      synth.resume();
+    }
+
     if (listenButton.classList.contains("listening")) {
       recognition.stop();
       return;
@@ -49,6 +103,11 @@ const setupSpeechRecognition = () => {
 
     if (!navigator.onLine) {
       speechStatus.textContent = "The tablet is offline. Connect to the internet, then press Listen again.";
+      return;
+    }
+
+    speechStatus.textContent = "Checking microphone permission...";
+    if (!(await checkMicrophonePermission())) {
       return;
     }
 
@@ -105,10 +164,10 @@ const setupSpeechRecognition = () => {
     setListening(false);
     const messages = {
       "not-allowed": "Microphone permission was blocked. Allow the microphone in Chrome and try again.",
-      "service-not-allowed": "Chrome cannot access speech recognition. Check the site connection and try again.",
+      "service-not-allowed": "Speech recognition is blocked here. Open this site over HTTPS or localhost.",
       "no-speech": "I did not hear anything. Press Listen and speak again.",
       "audio-capture": "No microphone was found. Check the robot tablet microphone.",
-      "network": "Chrome could not reach its speech service. Connect the tablet to the internet and press Listen again.",
+      "network": "Chrome speech service is unavailable. Check internet access and open the site over HTTPS.",
     };
     speechStatus.textContent = messages[event.error] || "Voice input failed. Press Listen and try again.";
   });
