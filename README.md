@@ -16,6 +16,8 @@ Use the **Listen** button beside the message field, allow microphone access in C
 and speak after the status changes to "Listening...". The recognized sentence is sent
 to the chatbot automatically.
 
-Chrome speech recognition requires a secure connection (`https://`) or `localhost`.
-When running this on the Sanbot tablet, serve the site over HTTPS; opening the HTML
-directly as a local file may prevent microphone access.
+Chrome speech recognition requires a secure connection (`https://`) or `localhost`
+and an active internet connection. Chrome sends speech recognition to its online
+speech service; it cannot recognize speech offline. When running this on the Sanbot
+tablet, connect it to Wi-Fi, serve the site over HTTPS, allow microphone access,
+and reload the page.

@@ -47,6 +47,11 @@ const setupSpeechRecognition = () => {
       return;
     }
 
+    if (!navigator.onLine) {
+      speechStatus.textContent = "The tablet is offline. Connect to the internet, then press Listen again.";
+      return;
+    }
+
     finalTranscript = "";
     recognitionError = false;
     try {
@@ -103,9 +108,21 @@ const setupSpeechRecognition = () => {
       "service-not-allowed": "Chrome cannot access speech recognition. Check the site connection and try again.",
       "no-speech": "I did not hear anything. Press Listen and speak again.",
       "audio-capture": "No microphone was found. Check the robot tablet microphone.",
-      "network": "Speech recognition needs an internet connection.",
+      "network": "Chrome could not reach its speech service. Connect the tablet to the internet and press Listen again.",
     };
     speechStatus.textContent = messages[event.error] || "Voice input failed. Press Listen and try again.";
+  });
+
+  window.addEventListener("online", () => {
+    if (!listenButton.classList.contains("listening")) {
+      speechStatus.textContent = "Internet connected. Press Listen and speak.";
+    }
+  });
+
+  window.addEventListener("offline", () => {
+    if (!listenButton.classList.contains("listening")) {
+      speechStatus.textContent = "The tablet is offline. Voice input needs an internet connection.";
+    }
   });
 };
 
