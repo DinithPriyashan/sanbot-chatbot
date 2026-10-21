@@ -11,7 +11,13 @@
 	<div id="container" class="container">
 		<div id="chat" class="chat">
 			<div id="messages" class="messages"></div>
-			<input id="input" type="text" placeholder="Say something..." autocomplete="off" autofocus="true" />
+			<div class="input-row">
+				<input id="input" type="text" placeholder="Say something..." autocomplete="off" autofocus="true" />
+				<button id="listen-button" type="button" aria-label="Start voice input">🎤 Listen</button>
+			</div>
+			<p id="speech-status" class="speech-status" role="status" aria-live="polite">
+				Press Listen and speak.
+			</p>
 		</div>
 		<img src="bot.png" alt="Robot cartoon" height="500vh">
 	</div>

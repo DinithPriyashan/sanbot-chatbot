@@ -40,6 +40,12 @@ span {
 	align-items: center;
 } 
 
+.input-row {
+	display: flex;
+	gap: 8px;
+	width: 100%;
+}
+
 ::-webkit-input-placeholder { 
 	color: .711 
 }
@@ -47,8 +53,40 @@ span {
 input { 
 	border: 0; 
 	padding: 15px; 
-	margin-left: auto;
+	flex: 1;
 	border-radius: 10px; 
+}
+
+button {
+	border: 0;
+	padding: 0 16px;
+	border-radius: 10px;
+	background-color: #1976d2;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+button:hover,
+button:focus-visible {
+	background-color: #125ca5;
+}
+
+button.listening {
+	background-color: #c62828;
+}
+
+button:disabled {
+	background-color: #9e9e9e;
+	cursor: not-allowed;
+}
+
+.speech-status {
+	margin: 8px 0 0;
+	color: #555;
+	font-size: 0.85rem;
+	text-align: center;
 }
 
 .messages {
@@ -93,5 +131,13 @@ input {
 	.chat {
 		width: 75vw;
 		margin: 10vw;
+	}
+
+	.input-row {
+		min-height: 48px;
+	}
+
+	button {
+		min-width: 110px;
 	}
 }

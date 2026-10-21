@@ -9,3 +9,13 @@ Enjoy!
 [Demo](https://sylviapap.github.io/chatbot/)
 
 [Blog post](https://dev.to/sylviapap/make-a-simple-chatbot-with-javascript-1gc)
+
+## Voice input
+
+Use the **Listen** button beside the message field, allow microphone access in Chrome,
+and speak after the status changes to "Listening...". The recognized sentence is sent
+to the chatbot automatically.
+
+Chrome speech recognition requires a secure connection (`https://`) or `localhost`.
+When running this on the Sanbot tablet, serve the site over HTTPS; opening the HTML
+directly as a local file may prevent microphone access.
