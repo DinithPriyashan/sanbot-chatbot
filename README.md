@@ -1,23 +1,36 @@
-# JavaScript Chatbot 
+# KITO AI
 
-This is a very simple "chatbot" using nothing but JavaScript, HTML, & CSS. I put this in quotes because chatbots these days are way more complex - this is an exercise in vanilla JS loops and conditionals, not AI.
+KITO AI is a React voice assistant interface built with Vite.
 
-I hope it makes a good intro for anyone interested in chatbots and frontend fundamentals.
+## Development
 
-Enjoy!
+```bash
+npm install
+npm run dev
+```
 
-[Demo](https://sylviapap.github.io/chatbot/)
+Create a production build with:
 
-[Blog post](https://dev.to/sylviapap/make-a-simple-chatbot-with-javascript-1gc)
+```bash
+npm run build
+```
 
-## Voice input
+## GitHub Pages deployment
 
-Use the **Listen** button beside the message field, allow microphone access in Chrome,
-and speak after the status changes to "Listening...". The recognized sentence is sent
-to the chatbot automatically.
+The included GitHub Actions workflow deploys the site automatically whenever
+changes are pushed to `main`.
 
-Chrome speech recognition requires a secure connection (`https://`) or `localhost`
-and an active internet connection. Chrome sends speech recognition to its online
-speech service; it cannot recognize speech offline. When running this on the Sanbot
-tablet, connect it to Wi-Fi, serve the site over HTTPS, allow microphone access,
-and reload the page.
+1. Push this project to a GitHub repository.
+2. In **Settings > Pages**, set **Source** to **GitHub Actions**.
+3. Push to `main` (or run the workflow manually from the **Actions** tab).
+
+The Vite base path is selected automatically from `GITHUB_REPOSITORY`, so both
+project pages (`https://<user>.github.io/<repository>/`) and user pages
+(`https://<user>.github.io/`) work correctly.
+
+If a different base path is needed for a local build, set `VITE_BASE_PATH`
+before running the build:
+
+```bash
+VITE_BASE_PATH=/my-site/ npm run build
+```
