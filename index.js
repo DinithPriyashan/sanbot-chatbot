@@ -2,22 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputField = document.getElementById("input");
   inputField.addEventListener("keydown", (e) => {
     if (e.code === "Enter") {
-      sendMessage();
+      let input = inputField.value;
+      inputField.value = "";
+      output(input);
     }
   });
 });
-
-function sendMessage() {
-  const inputField = document.getElementById("input");
-  const input = inputField.value.trim();
-
-  if (!input) {
-    return;
-  }
-
-  inputField.value = "";
-  output(input);
-}
 
 function output(input) {
   let product;
@@ -76,22 +66,11 @@ function compare(promptsArray, repliesArray, string) {
 
 function addChat(input, product) {
   const messagesContainer = document.getElementById("messages");
-  const welcomeMessage = messagesContainer.querySelector(".welcome-message");
-
-  if (welcomeMessage) {
-    welcomeMessage.remove();
-  }
 
   let userDiv = document.createElement("div");
   userDiv.id = "user";
   userDiv.className = "user response";
-  const userImg = document.createElement("img");
-  userImg.src = "user.png";
-  userImg.className = "avatar";
-  const userText = document.createElement("span");
-  userText.innerText = input;
-  userDiv.appendChild(userImg);
-  userDiv.appendChild(userText);
+  userDiv.innerHTML = `<img src="user.png" class="avatar"><span>${input}</span>`;
   messagesContainer.appendChild(userDiv);
 
   let botDiv = document.createElement("div");
