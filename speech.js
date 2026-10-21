@@ -5,8 +5,34 @@ let voiceRecognition = null;
 let voiceModeEnabled = false;
 let voiceRecognitionRunning = false;
 let waitingForReply = false;
+let speechOutputUnlocked = false;
+
+function getAndroidBridge() {
+  return window.Android || window.AndroidVoice || window.VoiceBridge || null;
+}
 
 const textToSpeech = (string) => {
+  const androidBridge = getAndroidBridge();
+
+  if (androidBridge) {
+    const speak = androidBridge.speakText || androidBridge.speak || androidBridge.textToSpeech;
+    if (typeof speak === "function") {
+      try {
+        speak.call(androidBridge, string);
+        document.body.classList.add("is-speaking");
+        return;
+      } catch (error) {
+        console.error("Android text-to-speech failed:", error);
+      }
+    }
+  }
+
+  if (!synth || !speechOutputUnlocked) {
+    document.getElementById("voice-status").innerText =
+      "Reply ready. Tap the microphone once to enable spoken replies.";
+    return;
+  }
+
   if (voiceModeEnabled && voiceRecognition && voiceRecognitionRunning) {
     voiceRecognition.stop();
   }
@@ -41,16 +67,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputField = document.getElementById("input");
   const voiceStatus = document.getElementById("voice-status");
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const androidBridge = window.Android;
+  const androidBridge = getAndroidBridge();
   const nativeStart = androidBridge &&
-    (androidBridge.startVoiceInput || androidBridge.startVoiceRecognition);
+    (androidBridge.startVoiceInput || androidBridge.startVoiceRecognition ||
+      androidBridge.startListening || androidBridge.listen);
   const nativeStop = androidBridge &&
-    (androidBridge.stopVoiceInput || androidBridge.stopVoiceRecognition);
+    (androidBridge.stopVoiceInput || androidBridge.stopVoiceRecognition ||
+      androidBridge.stopListening || androidBridge.stop);
+
+  function unlockSpeechOutput() {
+    speechOutputUnlocked = true;
+    if (synth && typeof synth.resume === "function") {
+      synth.resume();
+    }
+  }
+
+  document.addEventListener("click", unlockSpeechOutput, { once: true });
+  document.addEventListener("touchend", unlockSpeechOutput, { once: true });
+  document.addEventListener("keydown", unlockSpeechOutput, { once: true });
 
   if (!SpeechRecognition && !nativeStart) {
     micButton.disabled = true;
     micButton.title = "Voice input is not supported in this browser";
-    voiceStatus.innerText = "Voice input needs Chrome or Android WebView voice bridge support.";
+    voiceStatus.innerText = "Tap the microphone. This WebView needs native voice bridge support.";
     return;
   }
 
@@ -92,10 +131,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    window.onAndroidVoiceResult = window.onNativeVoiceResult;
+    window.onVoiceResult = window.onNativeVoiceResult;
+
     window.onNativeVoiceError = (message) => {
       setNativeListeningState(false);
       voiceStatus.innerText = message || "Tablet voice input failed. Please try again.";
     };
+
+    window.onAndroidVoiceError = window.onNativeVoiceError;
+    window.onVoiceError = window.onNativeVoiceError;
+    window.onNativeSpeechEnded = () => {
+      document.body.classList.remove("is-speaking");
+      waitingForReply = false;
+      if (voiceModeEnabled) {
+        startVoiceRecognition();
+      }
+    };
+
+    window.onAndroidSpeechEnded = window.onNativeSpeechEnded;
+    window.onSpeechEnded = window.onNativeSpeechEnded;
 
     window.resumeVoiceInput = startVoiceRecognition;
     micButton.addEventListener("click", () => {
@@ -114,8 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
       startVoiceRecognition();
     });
 
-    voiceModeEnabled = true;
-    setTimeout(startVoiceRecognition, 300);
+    voiceModeEnabled = false;
     return;
   }
 
@@ -253,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Start hands-free voice mode as soon as the page is ready.
-  voiceModeEnabled = true;
-  setTimeout(startVoiceRecognition, 300);
+  // WebViews and mobile browsers require a user gesture before microphone access.
+  voiceModeEnabled = false;
 });
